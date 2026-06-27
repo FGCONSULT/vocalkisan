@@ -1,6 +1,43 @@
+HEAD
 # dependencies
 node_modules/
 .vscode/
 .idea/
 .wix/
 jsconfig.json
+# Virtual environment folders
+.venv/
+venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache
+.streamlit/
+
+# Build / distribution folders
+build/
+dist/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.swp
+3629af9 (Initial commit: forecast app setup)
