@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Supply Forecast Widget</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 18px; }
+    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; max-width: 900px; }
+    .row { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+    textarea { width:100%; height:120px; font-family:monospace; }
+    #chartContainer { height:420px; }
+    .muted { color:#666; font-size:0.9em; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h3>Supply Forecast to 2050</h3>
+    <div class="row">
+      <label class="muted">Paste historical yearly supply JSON</label>
+    </div>
+    <div>
+      <textarea id="inputData">[
+  {"year":2010,"supply":1200},
+  {"year":2011,"supply":1250},
+  {"year":2012,"supply":1300},
+  {"year":2013,"supply":1280},
+  {"year":2014,"supply":1350},
+  {"year":2015,"supply":1400},
+  {"year":2016,"supply":1420},
+  {"year":2017,"supply":1450},
+  {"year":2018,"supply":1500},
+  {"year":2019,"supply":1520},
+  {"year":2020,"supply":1480},
+  {"year":2021,"supply":1550},
+  {"year":2022,"supply":1580}
+]</textarea>
+    </div>
+
+    <div class="row">
+      <label for="modelSelect">Model</label>
+      <select id="modelSelect">
+        <option value="linear">Linear regression</option>
+        <option value="poly2">Polynomial degree 2</option>
+        <option value="poly3">Polynomial degree 3</option>
+      </select>
+      <button id="runBtn">Run Forecast</button>
+      <div id="status" class="muted">Ready</div>
+    </div>
+
+    <div id="chartContainer">
+      <canvas id="supplyChart"></canvas>
+    </div>
+
+    <div style="margin-top:12px;">
+      <strong>Download</strong>
+      <button id="downloadCsv">Download CSV</button>
+      <span id="downloadStatus" class="muted"></span>
+    </div>
+  </div>
+
+<script>
+const API_BASE = 'https://viksitdairy2047.in/app'; // change to your backend base URL
+const ctx = document.getElementById('supplyChart').getContext('2d');
+let chart;
+
+function createChart(labels, historical, forecast) {
+  const datasets = [
+    { label: 'Historical supply', data: historical, borderColor:'#2b7cff', backgroundColor:'rgba(43,124,255,0.08)', tension:0.2, pointRadius:3 },
+    { label: 'Forecast supply', data: forecast, borderColor:'#ff7b2b', backgroundColor:'rgba(255,123,43,0.06)', borderDash:[6,4], tension:0.2, pointRadius:2 }
+  ];
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive:true,
+      plugins: { legend:{ position:'top' } },
+      scales: {
+        x: { title: { display:true, text:'Year' } },
+        y: { title: { display:true, text:'Supply' } }
+      }
+    }
+  });
+}
+
+function parseInput() {
+  try {
+    const arr = JSON.parse(document.getElementById('inputData').value);
+    return arr.map(r => ({ year: +r.year, supply: +r.supply })).sort((a,b)=>a.year-b.year);
+  } catch(e) {
+    throw new Error('Invalid JSON input');
+  }
+}
+
+async function runForecast() {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = 'Running forecast...';
+  try {
+    const hist = parseInput();
+    const model = document.getElementById('modelSelect').value;
+    const resp = await fetch(`${API_BASE}/forecast`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ historical: hist, model })
+    });
+    if (!resp.ok) throw new Error('API error ' + resp.status);
+    const json = await resp.json();
+    const labels = json.years;
+    const histSeries = json.historical;
+    const forecastSeries = json.forecast;
+    createChart(labels, histSeries, forecastSeries);
+    statusEl.textContent = 'Forecast ready';
+    // store last result for download
+    window._lastResult = json;
+  } catch(err) {
+    statusEl.textContent = 'Error: ' + err.message;
+  }
+}
+
+document.getElementById('runBtn').addEventListener('click', runForecast);
+
+document.getElementById('downloadCsv').addEventListener('click', () => {
+  const res = window._lastResult;
+  if (!res) { document.getElementById('downloadStatus').textContent = 'Run forecast first'; return; }
+  const rows = [['year','historical','forecast']];
+  for (let i=0;i<res.years.length;i++){
+    rows.push([res.years[i], res.historical[i] ?? '', res.forecast[i] ?? '']);
+  }
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'supply_forecast.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  document.getElementById('downloadStatus').textContent = 'CSV downloaded';
+});
+
+// initialize with empty chart
+createChart([], [], []);
+</script>
+</body>
+</html>
