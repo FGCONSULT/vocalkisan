@@ -44,7 +44,7 @@ if uploaded:
     df = pd.read_csv(uploaded)
 else:
     # Load a sample CSV from your project folder
-   df = pd.read_csv("C:\\Users\\Lenovo\\vocalkisan\\forecast2047\\data\\india_milk_data.csv")
+   df = pd.read_csv("data/india_milk_data.csv")
 
 
 
