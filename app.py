@@ -114,16 +114,16 @@ fig.add_trace(go.Scatter(x=forecast_years, y=demand_preds, mode="lines+markers",
 fig.add_trace(go.Scatter(x=df_hist.index, y=y_prod_hist, mode="lines+markers", name="Production (actual)", line=dict(color="green")))
 fig.add_trace(go.Scatter(x=forecast_years, y=prod_preds, mode="lines+markers", name="Production (forecast)", line=dict(color="green", dash="dash")))
 
-fig.update_layout(title="Milk Demand and Production Forecast (2010–2047)", xaxis_title="Year", yaxis_title="Milk units", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+fig.update_layout(title="Milk Demand and Production Forecast (2010–2047)", xaxis_title="Year", yaxis_title="Milk Million Ton", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 st.plotly_chart(fig, use_container_width=True)
 
 # Show projections
 proj_df = pd.DataFrame({
     "year": forecast_years,
-    "population": pop_proj,
-    "consumptionpercapita": cons_proj,
-    "milchanimal": animal_proj,
-    "milkyield": yield_proj
+    "population-million": pop_proj,
+    "consumptionpercapita-Gms/day": cons_proj,
+    "milchanimal-Million heads": animal_proj,
+    "milkyield-kg/year": yield_proj
 })
 st.subheader("Projected explanatory variables (2026–2047)")
 st.dataframe(proj_df.style.format("{:.2f}"))
